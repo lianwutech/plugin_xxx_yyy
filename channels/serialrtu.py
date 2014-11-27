@@ -5,13 +5,13 @@
 串口RTU通道类
 通过调用管理类对象的process_data函数实现信息的发送。
 """
-
+import time
 import logging
 
 import serial
 from pymodbus.client.sync import ModbusSerialClient
 
-from libs.modbus_define import *
+from libs.modbusdefine import *
 from libs.base_channel import BaseChannel
 
 
@@ -19,21 +19,29 @@ logger = logging.getLogger('plugin')
 
 
 class SerialRtuChannel(BaseChannel):
-    def __init__(self, network, channel_name, channel_protocol, channel_params, channel_manager, channel_type, mqtt_client):
+    def __init__(self, channel_params, channel_type, mqtt_client, devices_file_name):
+        BaseChannel.__init__(self, channel_params, channel_type, mqtt_client, devices_file_name)
+        # 配置项
         self.port = channel_params.get("port", "")
+        self.baund = channel_params.get("baund", 9600)
         self.stopbits = channel_params.get("stopbits", serial.STOPBITS_ONE)
         self.parity = channel_params.get("parity", serial.PARITY_NONE)
         self.bytesize = channel_params.get("bytesize", serial.EIGHTBITS)
-        self.baudrate = channel_params.get("baudrate", 9600)
         self.timeout = channel_params.get("timeout", 2)
+        self.protocol.set_device_info(self.port, self.baund)
+        # 通信对象
         self.modbus_client = None
-        BaseChannel.__init__(self, network, channel_name, channel_protocol, channel_params, channel_manager,
-                             channel_type, mqtt_client)
+
+    @staticmethod
+    def check_config(channel_params):
+        if "port" not in channel_params or "baund" not in channel_params:
+            return False
+        return BaseChannel.check_config(channel_params)
 
     def run(self):
         self.modbus_client = ModbusSerialClient(method='rtu',
                                                 port=self.port,
-                                                baudrate=self.baudrate,
+                                                baudrate=self.baund,
                                                 stopbits=self.stopbits,
                                                 parity=self.parity,
                                                 bytesize=self.bytesize,
@@ -44,15 +52,17 @@ class SerialRtuChannel(BaseChannel):
         except Exception, e:
             logger.error("连接串口失败，错误信息：%r." % e)
             self.modbus_client = None
+            return
 
-    def isAlive(self):
-        return True
+        while True:
+            # 该线程保持空转
+            time.sleep(5)
 
-    def process_cmd(self, device_info, device_cmd):
-        if self.modbus_client is None:
-            logger.error("modbus client is not connect.")
-            device_data = None
-            return False
+    def process_cmd(self, device_cmd_msg):
+        device_id = device_cmd_msg.get("device_id", "")
+        device_cmd = device_cmd_msg["command"]
+        if device_id in self.devices_info_dict:
+            device_info = self.devices_info_dict[device_id]
 
         if device_cmd["func_code"] == const.fc_read_coils or device_cmd["func_code"] == const.fc_read_discrete_inputs:
             req_result = self.modbus_client.read_coils(device_cmd["addr"],
@@ -171,9 +181,14 @@ class SerialRtuChannel(BaseChannel):
             logger.error("不支持的modbus指令：%d" % device_cmd["func_code"])
             device_data = None
 
-        data_msg = device_data
-        return self.channel_manager.process_data(self.network_name,
-                                                 self.channel_name,
-                                                 self.channel_protocol,
-                                                 device_info["device_id"],
-                                                 data_msg)
+        logger.debug("device_data:%r" % device_data)
+        if device_data is not None:
+            device_data_msg = {
+                "device_id": device_info["device_id"],
+                "device_addr": device_info["device_addr"],
+                "device_port": device_info["device_port"],
+                "device_type": device_info["device_type"],
+                "protocol": self.protocol.protocol,
+                "data": device_data
+            }
+            self.mqtt_client.publish_data(device_data_msg)

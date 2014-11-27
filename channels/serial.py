@@ -2,10 +2,12 @@
 # -*- coding:utf-8 -*-
 
 """
-HTTP-Server通道类
-通过调用管理类对象的process_data函数实现信息的发送。
+串口通道类
 """
+
 import logging
+
+import serial
 
 from libs.base_channel import BaseChannel
 
@@ -13,7 +15,7 @@ from libs.base_channel import BaseChannel
 logger = logging.getLogger('plugin')
 
 
-class HttpServerChannel(BaseChannel):
+class SerialChannel(BaseChannel):
     def __init__(self, channel_params, channel_type, mqtt_client, devices_file_name):
         BaseChannel.__init__(self, channel_params, channel_type, mqtt_client, devices_file_name)
 

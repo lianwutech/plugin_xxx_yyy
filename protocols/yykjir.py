@@ -31,7 +31,7 @@ class YykjifProtocol(BaseProtocol):
         :param data:
         :return:
         """
-        device_data_list = []
+        device_data_msg_list = []
 
         if "01:Begin" in data:
             # 开始消息忽略
@@ -50,7 +50,7 @@ class YykjifProtocol(BaseProtocol):
             result_data = None
 
         if result_data is not None:
-            device_data = {
+            device_data_msg = {
                 "device_id": "%s/%s/%d" % (network_name, self.device_addr, self.device_port),
                 "device_addr": self.device_addr,
                 "device_port": self.device_port,
@@ -58,9 +58,9 @@ class YykjifProtocol(BaseProtocol):
                 "protocol": self.protocol,
                 "data": result_data
             }
-            device_data_list.append(device_data)
+            device_data_msg_list.append(device_data_msg)
 
-        return device_data_list
+        return device_data_msg_list
 
     def process_cmd(self, device_cmd_msg):
         """

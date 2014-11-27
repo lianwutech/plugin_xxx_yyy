@@ -15,8 +15,8 @@ logger = logging.getLogger('plugin')
 
 
 class ModbusProtocol(BaseProtocol):
-    def __init__(self):
-        BaseProtocol.__init__()
+    def __init__(self, protocol_params):
+        BaseProtocol.__init__(self, protocol_params)
         # 修改协议名称
         self.protocol = "modbus"
 

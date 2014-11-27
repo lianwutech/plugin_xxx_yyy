@@ -14,12 +14,15 @@ logger = logging.getLogger('plugin')
 
 
 class TCPServerChannel(BaseChannel):
-    def __init__(self, network, channel_name, channel_protocol, channel_params, manager, channel_type, mqtt_client):
-        self.status = None
-        BaseChannel.__init__(network, channel_name, channel_protocol, channel_params, manager, channel_type, mqtt_client)
+    def __init__(self, channel_params, channel_type, mqtt_client, devices_file_name):
+        BaseChannel.__init__(self, channel_params, channel_type, mqtt_client, devices_file_name)
+
+    @staticmethod
+    def check_config(channel_params):
+        return BaseChannel.check_config(channel_params)
 
     def run(self):
         pass
 
-    def process_cmd(self, device_info, device_cmd):
+    def process_cmd(self, device_cmd_msg):
         pass
