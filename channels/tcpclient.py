@@ -5,6 +5,9 @@
 TCP-Client通道类
 通过调用管理类对象的process_data函数实现信息的发送。
 仅支持单个设备
+配置项说明：
+    host:主机地址
+    port:主机端口
 """
 
 import time
