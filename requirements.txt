@@ -1,0 +1,6 @@
+# Runtime requirements
+
+pyserial
+mosquitto
+pymodbus
+
