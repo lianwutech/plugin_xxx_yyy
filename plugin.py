@@ -9,6 +9,7 @@
 """
 
 import time
+
 from setting import *
 from libs.daemon import Daemon
 from libs.plugin import *
@@ -24,13 +25,12 @@ logger = logging.getLogger('plugin')
 # 配置信息
 config_info = load_config(config_file_name)
 
-# 通过工作目录获取当前插件名称
-plugin_name = PROCEDURE_PATH.split("/")[-1]
-
 
 # 主函数
 class PluginDaemon(Daemon):
     def _run(self):
+        # 切换工作目录
+        os.chdir(cur_file_dir())
 
         if "channel_type" not in config_info \
                 or "protocol_type" not in config_info \
