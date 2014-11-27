@@ -14,8 +14,8 @@ logger = logging.getLogger('plugin')
 
 
 class HttpServerChannel(BaseChannel):
-    def __init__(self, channel_params, channel_type, mqtt_client, devices_file_name):
-        BaseChannel.__init__(self, channel_params, channel_type, mqtt_client, devices_file_name)
+    def __init__(self, channel_params, devices_file_name, protocol, mqtt_client):
+        BaseChannel.__init__(self, channel_params, devices_file_name, protocol, mqtt_client)
 
     @staticmethod
     def check_config(channel_params):

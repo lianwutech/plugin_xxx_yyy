@@ -1,6 +1,6 @@
 # Runtime requirements
 
+httplib2
 pyserial
 mosquitto
 pymodbus
-
