@@ -80,7 +80,7 @@ class TcpClientChannel(BaseChannel):
             return
         try:
             command = self.protocol.process_cmd(device_cmd_msg)
-            if command is not None:
+            if len(command) > 0:
                 self.socket.send(command)
             else:
                 logger.info("消息%r处理返回空。" % device_cmd_msg)
