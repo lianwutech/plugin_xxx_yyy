@@ -40,6 +40,13 @@ class MQTTClient(object):
                 logger.error("消息内容错误，%r" % msg.payload)
                 return
 
+            if "device_id" not in cmd_msg \
+                    or "device_addr" not in cmd_msg\
+                    or "device_port" not in cmd_msg\
+                    or "device_type" not in cmd_msg:
+                logger.error("消息格式错误。")
+                return
+
             if cmd_msg["device_id"] != msg.topic:
                 logger.error("device_id（%s）和topic(%s)不一致." % (cmd_msg["device_id"], msg.topic))
                 return
