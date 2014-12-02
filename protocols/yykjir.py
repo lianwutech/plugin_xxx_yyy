@@ -62,15 +62,17 @@ class YykjifProtocol(BaseProtocol):
                 device_port = self.device_port
                 device_type = self.device_type
 
-            device_data_msg = {
-                "device_id": device_id,
-                "device_addr": device_addr,
-                "device_port": device_port,
-                "device_type": device_type,
-                "protocol": self.protocol_type,
-                "data": result_data
-            }
-            device_data_msg_list.append(device_data_msg)
+            if self.device_cmd_msg is not None:
+                # 需要根据原有指令组包
+                device_data_msg = {
+                    "device_id": device_id,
+                    "device_addr": device_addr,
+                    "device_port": device_port,
+                    "device_type": device_type,
+                    "protocol": self.protocol_type,
+                    "data": {"command": self.device_cmd_msg["command"], "result": result_data}
+                }
+                device_data_msg_list.append(device_data_msg)
 
         return device_data_msg_list
 
