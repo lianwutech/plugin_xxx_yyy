@@ -81,8 +81,6 @@ class YykjifProtocol(BaseProtocol):
 
             # 处理完成后，消息置空
             self.device_cmd_msg = None
-        else:
-            logger.error("错误消息响应或指令已超时.")
 
         return device_data_msg_list
 
