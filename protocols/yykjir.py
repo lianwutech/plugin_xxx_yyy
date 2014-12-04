@@ -5,6 +5,7 @@
 YYkj协议类
 """
 
+import datetime
 import logging
 
 from libs.base_protocol import BaseProtocol
@@ -12,6 +13,8 @@ from libs.base_protocol import BaseProtocol
 
 logger = logging.getLogger('plugin')
 
+# 指令超时时间，单位秒
+timeout_interval = 5
 
 class YykjifProtocol(BaseProtocol):
     def __init__(self, protocol_params):
@@ -20,6 +23,8 @@ class YykjifProtocol(BaseProtocol):
         self.protocol_type = "yykjir"
         self.device_type = "yykjir"
         self.device_cmd_msg = None
+        # 如果指令5s没有返回则认为超时
+        self.timeout_datatime = datetime.datetime.now() + datetime.timedelta(seconds=timeout_interval)
 
     @staticmethod
     def check_config(protocol_params):
@@ -74,6 +79,11 @@ class YykjifProtocol(BaseProtocol):
                 }
                 device_data_msg_list.append(device_data_msg)
 
+            # 处理完成后，消息置空
+            self.device_cmd_msg = None
+        else:
+            logger.error("错误消息响应或指令已超时.")
+
         return device_data_msg_list
 
     def process_cmd(self, device_cmd_msg):
@@ -82,13 +92,28 @@ class YykjifProtocol(BaseProtocol):
         :param device_cmd_msg:
         :return:
         """
-        self.device_cmd_msg = device_cmd_msg
+        # 判断指令有效性
         if device_cmd_msg["device_type"] == self.device_type:
             device_cmd = device_cmd_msg["command"]
             device_cmd = device_cmd.strip()
-            if len(device_cmd) != 6 or ('S' not in device_cmd and 'F' not in device_cmd):
+            if len(device_cmd) != 6 \
+                    or ('S' not in device_cmd and 'F' not in device_cmd)\
+                    or (not device_cmd[1:6].isdigit()):
                 device_cmd = ""
+            else:
+                if self.device_cmd_msg is None or datetime.datetime.now() > self.timeout_datatime:
+                    # 命令消息为空，或命令超时，则执行当前命令
+                    self.device_cmd_msg = device_cmd_msg
+                    self.timeout_datatime = datetime.datetime.now() + datetime.timedelta(seconds=timeout_interval)
+                    logger.debug("执行指令消息:%r" % device_cmd_msg)
+                else:
+                    # 上一条命令未超时，则丢弃当前命令
+                    logger.info("上一条指令消息(%r)执行中，当前指令消息(%r)丢弃." % (self.device_cmd_msg, device_cmd_msg))
+                    device_cmd = ""
         else:
+            # 错误洗哦阿西
+            logger.error("错误消息:%r." % device_cmd_msg)
             device_cmd = ""
+
         return device_cmd
 
