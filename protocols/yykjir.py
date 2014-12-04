@@ -14,7 +14,7 @@ from libs.base_protocol import BaseProtocol
 logger = logging.getLogger('plugin')
 
 # 指令超时时间，单位秒
-timeout_interval = 5
+timeout_interval = 10
 
 class YykjifProtocol(BaseProtocol):
     def __init__(self, protocol_params):
