@@ -59,7 +59,7 @@ class MQTTClient(object):
 
             return
 
-        self.mqtt_client = mqtt.Client(client_id=self.client_id)
+        self.mqtt_client = mqtt.Client(client_id=self.client_id, clean_session=False)
         self.mqtt_client.on_connect = on_connect
         self.mqtt_client.on_message = on_message
 
@@ -77,7 +77,7 @@ class MQTTClient(object):
 
     def connect(self):
         try:
-            self.mqtt_client.connect(self.server_addr, self.server_port, 60)
+            self.mqtt_client.connect(host=self.server_addr, port=self.server_port, keepalive=60)
             return True
         except Exception, e:
             logger.error("MQTT链接失败，错误内容:%r" % e)
@@ -93,7 +93,8 @@ class MQTTClient(object):
             # 该情况可能发生在插件启动时，channel已启动，但mqtt还未connect
             logger.debug("mqtt对象未初始化")
         else:
-            self.mqtt_client.publish(topic=self.gateway_topic, payload=json.dumps(device_data_msg))
+            self.mqtt_client.reconnect()
+            self.mqtt_client.publish(topic=self.gateway_topic, payload=json.dumps(device_data_msg), qos=1)
             logger.info("向Topic(%s)发布消息：%r" % (self.gateway_topic, device_data_msg))
 
     def run(self):
@@ -101,6 +102,7 @@ class MQTTClient(object):
             self.mqtt_client.loop_forever()
         except Exception, e:
             logger.error("MQTT链接失败，错误内容:%r" % e)
+            self.mqtt_client.disconnect()
 
     def start(self):
         if self.thread is not None:
