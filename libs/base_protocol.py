@@ -22,6 +22,7 @@ class BaseProtocol(object):
         self.device_cmd_msg = None
         # channel对象
         self.channel = None
+        self.thread = None
 
     @staticmethod
     def check_config(protocol_params):
