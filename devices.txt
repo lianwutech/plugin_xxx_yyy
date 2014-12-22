@@ -1,1 +1,1 @@
-{"home/140506005540/0": {"device_addr": "140506005540", "device_port": '0', "device_type": "dbkzq", "device_id": "home/140506005540/0"}}
+{"home/140506005540/0": {"device_addr": "140506005540", "device_port": "0", "device_type": "dbkzq", "device_id": "home/140506005540/0"}}
