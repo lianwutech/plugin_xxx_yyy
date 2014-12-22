@@ -3,6 +3,7 @@
 
 """
 realcom协议，上海卓岚科技
+北川仪表电表控制器
 """
 import time
 import datetime
@@ -19,7 +20,7 @@ logger = logging.getLogger('plugin')
 timeout_interval = 10
 
 
-class ZLRealComProtocol(BaseProtocol):
+class ZLRealComBcybDbkzqProtocol(BaseProtocol):
     def __init__(self, protocol_params):
         BaseProtocol.__init__(self, protocol_params)
         # 修改协议名称
