@@ -4,7 +4,11 @@
 """
 基础协议类
 内存拼接和消息处理由协议类来处理
+进程主要用来控制心跳
 """
+
+import time
+import threading
 
 
 class BaseProtocol(object):
@@ -16,6 +20,8 @@ class BaseProtocol(object):
         self.device_type = "basic"
         # 缓存命令来方便解析数据
         self.device_cmd_msg = None
+        # channel对象
+        self.channel = None
 
     @staticmethod
     def check_config(protocol_params):
@@ -44,4 +50,26 @@ class BaseProtocol(object):
         """
         self.device_cmd_msg = device_cmd_msg
         return ""
+
+    def set_channel(self, channel):
+        self.channel = channel
+
+    def run(self):
+        while True:
+            time.sleep(10)
+
+    def start(self):
+        if self.thread is not None:
+            # 如果进程非空，则等待退出
+            self.thread.join(1)
+
+        # 启动一个新的线程来运行
+        self.thread = threading.Thread(target=self.run)
+        self.thread.start()
+
+    def isAlive(self):
+        if self.thread is not None:
+            return self.thread.isAlive()
+        else:
+            return False
 

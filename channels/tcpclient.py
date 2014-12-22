@@ -86,3 +86,16 @@ class TcpClientChannel(BaseChannel):
                 logger.info("消息%r处理返回空。" % device_cmd_msg)
         except Exception, e:
             logger.error("Send_cmd error, error info:%r" % e)
+
+    def send_data(self, data):
+        if self.socket is None:
+            logger.info("设备链接未建立")
+            return False
+
+        # 发送数据
+        try:
+            self.socket.send(data)
+            return True
+        except Exception, e:
+            logger.error("Socket error, error info:%r" % e)
+            return False

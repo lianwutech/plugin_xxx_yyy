@@ -73,8 +73,11 @@ class PluginDaemon(Daemon):
         # 3、初始化channel对象
         channel = channel_class(config_info["channel"], devices_file_name, protocol, mqtt_client, network_name)
 
-        # 4、设置通道对象
+        # 4、mqtt设置通道对象
         mqtt_client.set_channel(channel)
+
+        # 5、协议设置通道对象
+        protocol.set_channel(channel)
 
         while True:
             if not channel.isAlive():
@@ -84,6 +87,11 @@ class PluginDaemon(Daemon):
             if not mqtt_client.isAlive():
                 logger.info("mqtt进程停止，重新启动。")
                 mqtt_client.start()
+
+            if not protocol.isAlive():
+                logger.info("protocol进程停止，重新启动。")
+                protocol.start()
+
             logger.debug("周期处理结束")
             time.sleep(2)
 

@@ -111,3 +111,11 @@ class BaseChannel(object):
             return self.thread.isAlive()
         else:
             return False
+
+    def send_data(self, data):
+        """
+        直接发送数据
+        :param data:
+        :return:
+        """
+        return True
