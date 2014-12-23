@@ -16,9 +16,6 @@ from libs.base_protocol import BaseProtocol
 
 logger = logging.getLogger('plugin')
 
-# 指令超时时间，单位秒
-timeout_interval = 5
-
 
 def reverse_data(data_str):
     """
@@ -81,8 +78,6 @@ class ZLRealComBcybDbkzqProtocol(BaseProtocol):
         self.protocol_type = "bdyb"
         self.device_type = ["dbkzq"]
         self.device_cmd_msg = None
-        # 如果指令5s没有返回则认为超时
-        self.timeout_datatime = datetime.datetime.now() + datetime.timedelta(seconds=timeout_interval)
 
     @staticmethod
     def check_config(protocol_params):
@@ -201,16 +196,17 @@ class ZLRealComBcybDbkzqProtocol(BaseProtocol):
         """
         输入设备指令消息返回设备指令字符串
         :param device_cmd_msg:
-        :return:
+        :return: ""－命令错误，其他－命令正常
         """
         cmd_data = ""
-        if self.device_cmd_msg is None or datetime.datetime.now() > self.timeout_datatime:
+        if self.device_cmd_msg is None or self.check_timeout():
             # 命令消息为空，或命令超时，则执行当前命令
             self.device_cmd_msg = device_cmd_msg
-            self.timeout_datatime = datetime.datetime.now() + datetime.timedelta(seconds=timeout_interval)
+            self.reset_timer()
             logger.debug("执行指令消息:%r" % device_cmd_msg)
         else:
-            # 上一条命令未超时，则丢弃当前命令
+            # 上一条命令未超时，当前命令不执行，放入未处理队列
+            self.add_pending(device_cmd_msg)
             logger.info("上一条指令消息(%r)执行中，当前指令消息(%r)丢弃." % (self.device_cmd_msg, device_cmd_msg))
             return cmd_data
 
@@ -292,4 +288,9 @@ class ZLRealComBcybDbkzqProtocol(BaseProtocol):
                 self.channel.send_data(data)
             else:
                 logger.info("channel为空，不处理.")
-            time.sleep(10)
+
+            # 处理未处理的消息
+            for device_cmd_msg in self.pending_device_cmd_msg_list:
+                self.process_cmd(device_cmd_msg)
+
+            time.sleep(1)

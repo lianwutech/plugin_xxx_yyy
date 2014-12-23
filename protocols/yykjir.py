@@ -13,9 +13,6 @@ from libs.base_protocol import BaseProtocol
 
 logger = logging.getLogger('plugin')
 
-# 指令超时时间，单位秒
-timeout_interval = 10
-
 class YykjifProtocol(BaseProtocol):
     def __init__(self, protocol_params):
         BaseProtocol.__init__(self, protocol_params)
@@ -23,8 +20,6 @@ class YykjifProtocol(BaseProtocol):
         self.protocol_type = "yykjir"
         self.device_type = "yykjir"
         self.device_cmd_msg = None
-        # 如果指令5s没有返回则认为超时
-        self.timeout_datatime = datetime.datetime.now() + datetime.timedelta(seconds=timeout_interval)
 
     @staticmethod
     def check_config(protocol_params):
@@ -99,14 +94,15 @@ class YykjifProtocol(BaseProtocol):
                     or (not device_cmd[1:6].isdigit()):
                 device_cmd = ""
             else:
-                if self.device_cmd_msg is None or datetime.datetime.now() > self.timeout_datatime:
+                if self.device_cmd_msg is None or self.check_timeout():
                     # 命令消息为空，或命令超时，则执行当前命令
                     self.device_cmd_msg = device_cmd_msg
-                    self.timeout_datatime = datetime.datetime.now() + datetime.timedelta(seconds=timeout_interval)
+                    self.reset_timer()
                     logger.debug("执行指令消息:%r" % device_cmd_msg)
                 else:
-                    # 上一条命令未超时，则丢弃当前命令
-                    logger.info("上一条指令消息(%r)执行中，当前指令消息(%r)丢弃." % (self.device_cmd_msg, device_cmd_msg))
+                    # 上一条命令未超时，则放入待处理
+                    self.add_pending(device_cmd_msg)
+                    logger.info("上一条指令消息(%r)执行中，当前指令消息(%r)待处理." % (self.device_cmd_msg, device_cmd_msg))
                     device_cmd = ""
         else:
             # 错误洗哦阿西

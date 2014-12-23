@@ -8,6 +8,7 @@
 """
 
 import time
+import datetime
 import threading
 
 
@@ -23,6 +24,16 @@ class BaseProtocol(object):
         # channel对象
         self.channel = None
         self.thread = None
+        # 缓存未处理的消息
+        self.pending_device_cmd_msg_list = list()
+        # 初始化超时时间，默认5s
+        if "timeout" in protocol_params:
+            self.timeout_interval = protocol_params["timeout"]
+        else:
+            # 默认5s超时
+            self.timeout_interval = 5
+        # 初始化定时器
+        self.reset_timer()
 
     @staticmethod
     def check_config(protocol_params):
@@ -45,7 +56,7 @@ class BaseProtocol(object):
 
     def process_cmd(self, device_cmd_msg):
         """
-        处理设备指令
+        处理设备指令，如果上一条指令未完成，则append未完成队列Pending_device_cmd_msg_list
         :param device_cmd_msg:设备指令，格式为device_id, device_addr, device_port, device_type, cmd
         :return:
         """
@@ -57,7 +68,10 @@ class BaseProtocol(object):
 
     def run(self):
         while True:
-            time.sleep(10)
+            # 处理未处理的消息
+            for device_cmd_msg in self.pending_device_cmd_msg_list:
+                self.process_cmd(device_cmd_msg)
+            time.sleep(1)
 
     def start(self):
         if self.thread is not None:
@@ -74,3 +88,19 @@ class BaseProtocol(object):
         else:
             return False
 
+    def add_pending(self, device_cmd_msg):
+        self.pending_device_cmd_msg_list.append(device_cmd_msg)
+
+    def reset_timer(self):
+        """
+        重置计时器
+        :return:
+        """
+        self.timeout_datatime = datetime.datetime.now() + datetime.timedelta(seconds=self.timeout_interval)
+
+    def check_timeout(self):
+        """
+        超时检查
+        :return:
+        """
+        return datetime.datetime.now() > self.timeout_datatime
