@@ -291,6 +291,7 @@ class ZLRealComBcybDbkzqProtocol(BaseProtocol):
 
             # 处理未处理的消息
             for device_cmd_msg in self.pending_device_cmd_msg_list:
+                self.pending_device_cmd_msg_list.remove(device_cmd_msg)
                 self.channel.process_cmd(device_cmd_msg)
 
             time.sleep(1)
