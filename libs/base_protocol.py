@@ -53,7 +53,9 @@ class BaseProtocol(object):
         返回device_data数组
         :param network_name:网络名称，data:收到的数据
         :return:设备数据字典
-        设备数据格式:device_id, device_addr, device_port, device_type, data(如果是下行指令的处理结果，则需包含”command_id)
+        设备数据格式:device_id, device_addr, device_port, device_type, data
+        对于下行指令的处理结果则data包含command_id,result；
+        主动上行数据data只包含result.
         """
         return []
 

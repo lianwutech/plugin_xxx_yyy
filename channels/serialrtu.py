@@ -207,6 +207,6 @@ class SerialRtuChannel(BaseChannel):
                 "device_port": device_info["device_port"],
                 "device_type": device_info["device_type"],
                 "protocol": self.protocol.protocol_type,
-                "data": device_data
+                "data": {"result": device_data}
             }
             self.mqtt_client.publish_data(device_data_msg)
