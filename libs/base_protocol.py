@@ -10,7 +10,10 @@
 import time
 import datetime
 import threading
+import logging
 
+
+logger = logging.getLogger('plugin')
 
 class BaseProtocol(object):
     def __init__(self, protocol_params):
@@ -50,14 +53,14 @@ class BaseProtocol(object):
         返回device_data数组
         :param network_name:网络名称，data:收到的数据
         :return:设备数据字典
-        设备数据格式:device_id, device_addr, device_port, device_type, data
+        设备数据格式:device_id, device_addr, device_port, device_type, data(如果是下行指令的处理结果，则需包含”command_id)
         """
         return []
 
     def process_cmd(self, device_cmd_msg):
         """
         处理设备指令，如果上一条指令未完成，则append未完成队列Pending_device_cmd_msg_list
-        :param device_cmd_msg:设备指令，格式为device_id, device_addr, device_port, device_type, cmd
+        :param device_cmd_msg:设备指令，格式为device_id, device_addr, device_port, device_type, command. command_id
         :return:
         """
         self.device_cmd_msg = device_cmd_msg
@@ -99,9 +102,23 @@ class BaseProtocol(object):
         """
         self.timeout_datatime = datetime.datetime.now() + datetime.timedelta(seconds=self.timeout_interval)
 
-    def check_timeout(self):
+    def check_process(self):
         """
         超时检查
         :return:
         """
-        return datetime.datetime.now() > self.timeout_datatime
+        return self.device_cmd_msg is None or datetime.datetime.now() > self.timeout_datatime
+
+    def check_command_msg(self, device_command_msg):
+        if device_command_msg is not None \
+                and "device_id" in device_command_msg\
+                and "device_type" in device_command_msg\
+                and "device_addr" in device_command_msg\
+                and "device_port" in device_command_msg\
+                and "command" in device_command_msg\
+                and "command_id" in device_command_msg\
+                and device_command_msg["device_type"] == self.device_type:
+            return True
+        else:
+            logger.error("错误消息:%r." % device_command_msg)
+            return False

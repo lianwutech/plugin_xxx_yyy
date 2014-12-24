@@ -70,7 +70,7 @@ class YykjifProtocol(BaseProtocol):
                     "device_port": device_port,
                     "device_type": device_type,
                     "protocol": self.protocol_type,
-                    "data": {"command": self.device_cmd_msg["command"], "result": result_data}
+                    "data": {"command_id": self.device_cmd_msg["command_id"], "result": result_data}
                 }
                 device_data_msg_list.append(device_data_msg)
 
@@ -86,28 +86,27 @@ class YykjifProtocol(BaseProtocol):
         :return:
         """
         # 判断指令有效性
-        if device_cmd_msg["device_type"] == self.device_type:
-            device_cmd = device_cmd_msg["command"]
-            device_cmd = device_cmd.strip()
-            if len(device_cmd) != 6 \
-                    or ('S' not in device_cmd and 'F' not in device_cmd)\
-                    or (not device_cmd[1:6].isdigit()):
-                device_cmd = ""
-            else:
-                if self.device_cmd_msg is None or self.check_timeout():
-                    # 命令消息为空，或命令超时，则执行当前命令
-                    self.device_cmd_msg = device_cmd_msg
-                    self.reset_timer()
-                    logger.debug("执行指令消息:%r" % device_cmd_msg)
-                else:
-                    # 上一条命令未超时，则放入待处理
-                    self.add_pending(device_cmd_msg)
-                    logger.info("上一条指令消息(%r)执行中，当前指令消息(%r)待处理." % (self.device_cmd_msg, device_cmd_msg))
-                    device_cmd = ""
+        if not self.check_command_msg(device_cmd_msg):
+            return ""
+
+        device_cmd = ""
+        command = device_cmd_msg["command"]
+        command = command.strip()
+        if len(command) != 6 \
+                or ('S' not in command and 'F' not in command)\
+                or (not command[1:6].isdigit()):
+            logger.error("错误的消息格式:%s" % command)
         else:
-            # 错误洗哦阿西
-            logger.error("错误消息:%r." % device_cmd_msg)
-            device_cmd = ""
+            if self.check_process():
+                # 命令消息为空，或命令超时，则执行当前命令
+                device_cmd = command
+                self.device_cmd_msg = device_cmd_msg
+                self.reset_timer()
+                logger.debug("执行指令消息:%r" % device_cmd_msg)
+            else:
+                # 上一条命令未超时，则放入待处理
+                self.add_pending(device_cmd_msg)
+                logger.info("上一条指令消息(%r)执行中，当前指令消息(%r)待处理." % (self.device_cmd_msg, device_cmd_msg))
 
         return device_cmd
 

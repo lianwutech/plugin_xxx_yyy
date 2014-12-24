@@ -149,7 +149,7 @@ class ZLRealComBcybDbkzqProtocol(BaseProtocol):
                         "device_port": device_port,
                         "device_type": device_type,
                         "protocol": self.protocol_type,
-                        "data": {"command": self.device_cmd_msg["command"], "result": ammeter_data}
+                        "data": {"command_id": self.device_cmd_msg["command_id"], "result": ammeter_data}
                     }
                     device_data_msg_list.append(device_data_msg)
 
@@ -167,7 +167,7 @@ class ZLRealComBcybDbkzqProtocol(BaseProtocol):
                     "device_port": self.device_cmd_msg["device_port"],
                     "device_type": self.device_cmd_msg["device_type"],
                     "protocol": self.protocol_type,
-                    "data": {"command": self.device_cmd_msg["command"], "result": result_data}
+                    "data": {"command_id": self.device_cmd_msg["command_id"], "result": result_data}
                 }
                 device_data_msg_list.append(device_data_msg)
                 # 处理完成后，消息置空
@@ -182,7 +182,7 @@ class ZLRealComBcybDbkzqProtocol(BaseProtocol):
                     "device_port": self.device_cmd_msg["device_port"],
                     "device_type": self.device_cmd_msg["device_type"],
                     "protocol": self.protocol_type,
-                    "data": {"command": self.device_cmd_msg["command"], "result": result_data}
+                    "data": {"command_id": self.device_cmd_msg["command_id"], "result": result_data}
                 }
                 device_data_msg_list.append(device_data_msg)
                 # 处理完成后，消息置空
@@ -195,11 +195,15 @@ class ZLRealComBcybDbkzqProtocol(BaseProtocol):
     def process_cmd(self, device_cmd_msg):
         """
         输入设备指令消息返回设备指令字符串
-        :param device_cmd_msg:
+        :param device_cmd_msg
         :return: ""－命令错误，其他－命令正常
         """
+        # 判断指令有效性
+        if not self.check_command_msg(device_cmd_msg):
+            return ""
+
         cmd_data = ""
-        if self.device_cmd_msg is None or self.check_timeout():
+        if self.check_process():
             # 命令消息为空，或命令超时，则执行当前命令
             self.device_cmd_msg = device_cmd_msg
             self.reset_timer()
@@ -210,68 +214,63 @@ class ZLRealComBcybDbkzqProtocol(BaseProtocol):
             logger.info("上一条指令消息(%r)执行中，当前指令消息(%r)丢弃." % (self.device_cmd_msg, device_cmd_msg))
             return cmd_data
 
-        # 判断指令有效性
-        if device_cmd_msg["device_type"] in self.device_type:
-            device_cmd = device_cmd_msg["command"]
-            self.device_cmd_msg = device_cmd_msg
-            # 对设备控制命令进行编码
-            device_cmd_str = ""
-            # 支持设备命令有：get_data, open, close
-            if "get_data" == device_cmd:
-                # 查询数据指令
-                # 对表号进行翻转
-                # 对标示符进行转换
-                origin_flag_data = "02ff5555"
-                if len(origin_flag_data) != 8:
-                    return ""
-                # ＋33操作
-                flag_data_a33 = data_str_add_33(origin_flag_data)
-                # 进行翻转操作
-                flag_data = reverse_data(flag_data_a33)
-
-                # 对表号进行翻转
-                ammeter_id = device_cmd_msg.get("device_addr", "000000000000")
-                ammeter_id_reverse = reverse_data(ammeter_id)
-                device_cmd_str = "68" + ammeter_id_reverse + "68" + "1104" + flag_data
-                # 计算校验码
-                check_code_str = cal_check_code(device_cmd_str)
-                # 组结尾
-                device_cmd_str = device_cmd_str + check_code_str + "16"
-            elif "open" == device_cmd:
-                # 合闸，通电
-                ammeter_id = device_cmd_msg.get("device_addr", "000000000000")
-                ammeter_id_reverse = reverse_data(ammeter_id)
-                # 硬编码：14 0d 35 34 53 ca 33 33 33 33 ab 89 67 45 42
-                device_cmd_str = "68" + ammeter_id_reverse + "68" + "140d353453ca33333333ab89674542"
-                # 计算校验码
-                check_code_str = cal_check_code(device_cmd_str)
-                # 组结尾
-                device_cmd_str = device_cmd_str + check_code_str + "16"
-
-            elif "close" == device_cmd:
-                # 跳闸，断电
-                ammeter_id = device_cmd_msg.get("device_addr", "000000000000")
-                ammeter_id_reverse = reverse_data(ammeter_id)
-                # 硬编码：14 0d 34 34 53 ca 33 33 33 33 ab 89 67 45 42
-                device_cmd_str = "68" + ammeter_id_reverse + "68" + "140d343453ca33333333ab89674542"
-                # 计算校验码
-                check_code_str = cal_check_code(device_cmd_str)
-                # 组结尾
-                device_cmd_str = device_cmd_str + check_code_str + "16"
-
-            else:
-                logger.error("cmd_type error: %s" % device_cmd)
+        device_cmd = device_cmd_msg["command"]
+        self.device_cmd_msg = device_cmd_msg
+        # 对设备控制命令进行编码
+        device_cmd_str = ""
+        # 支持设备命令有：get_data, open, close
+        if "get_data" == device_cmd:
+            # 查询数据指令
+            # 对表号进行翻转
+            # 对标示符进行转换
+            origin_flag_data = "02ff5555"
+            if len(origin_flag_data) != 8:
                 return ""
+            # ＋33操作
+            flag_data_a33 = data_str_add_33(origin_flag_data)
+            # 进行翻转操作
+            flag_data = reverse_data(flag_data_a33)
 
-            # 对标示符进行＋33操作
-            # 将command进行十六进制解码并打包
-            try:
-                cmd_data = binascii.a2b_hex(device_cmd_str)
-            except Exception, e:
-                logger.error("str(%s) binascii.a2b_hex error(%r)." % (device_cmd_str, e))
+            # 对表号进行翻转
+            ammeter_id = device_cmd_msg.get("device_addr", "000000000000")
+            ammeter_id_reverse = reverse_data(ammeter_id)
+            device_cmd_str = "68" + ammeter_id_reverse + "68" + "1104" + flag_data
+            # 计算校验码
+            check_code_str = cal_check_code(device_cmd_str)
+            # 组结尾
+            device_cmd_str = device_cmd_str + check_code_str + "16"
+        elif "open" == device_cmd:
+            # 合闸，通电
+            ammeter_id = device_cmd_msg.get("device_addr", "000000000000")
+            ammeter_id_reverse = reverse_data(ammeter_id)
+            # 硬编码：14 0d 35 34 53 ca 33 33 33 33 ab 89 67 45 42
+            device_cmd_str = "68" + ammeter_id_reverse + "68" + "140d353453ca33333333ab89674542"
+            # 计算校验码
+            check_code_str = cal_check_code(device_cmd_str)
+            # 组结尾
+            device_cmd_str = device_cmd_str + check_code_str + "16"
+
+        elif "close" == device_cmd:
+            # 跳闸，断电
+            ammeter_id = device_cmd_msg.get("device_addr", "000000000000")
+            ammeter_id_reverse = reverse_data(ammeter_id)
+            # 硬编码：14 0d 34 34 53 ca 33 33 33 33 ab 89 67 45 42
+            device_cmd_str = "68" + ammeter_id_reverse + "68" + "140d343453ca33333333ab89674542"
+            # 计算校验码
+            check_code_str = cal_check_code(device_cmd_str)
+            # 组结尾
+            device_cmd_str = device_cmd_str + check_code_str + "16"
+
         else:
-            # 错误洗哦阿西
-            logger.error("错误消息:%r." % device_cmd_msg)
+            logger.error("cmd_type error: %s" % device_cmd)
+            return ""
+
+        # 对标示符进行＋33操作
+        # 将command进行十六进制解码并打包
+        try:
+            cmd_data = binascii.a2b_hex(device_cmd_str)
+        except Exception, e:
+            logger.error("str(%s) binascii.a2b_hex error(%r)." % (device_cmd_str, e))
 
         return cmd_data
 
