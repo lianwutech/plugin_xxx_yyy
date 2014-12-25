@@ -90,6 +90,14 @@ class ZLRealComBcybDbkzqProtocol(BaseProtocol):
         :param data:
         :return:
         """
+        # 重置当前消息状态，否则其他消息无法执行
+        orgin_device_cmd_msg = self.device_cmd_msg
+        self.device_cmd_msg = None
+
+        if orgin_device_cmd_msg is None:
+            # 原消息已丢失，本协议必须原消息才能正常处理，所以忽略该消息.
+            return []
+
         # 解析realcom协议
         realcom_data_str = ""
         # 首先进行16进制字符串编码
@@ -130,63 +138,43 @@ class ZLRealComBcybDbkzqProtocol(BaseProtocol):
                 ammeter_data = data_str_minus_33(ammeter_data_reverse)
                 logger.debug("ammeter_id:%s, ammeter_data:%s" % (ammeter_id, ammeter_data))
 
-                if self.device_cmd_msg is not None:
-                    device_id = self.device_cmd_msg["device_id"]
-                    device_addr = self.device_cmd_msg["device_addr"]
-                    device_port = self.device_cmd_msg["device_port"]
-                    device_type = self.device_cmd_msg["device_type"]
-                else:
-                    device_id = "%s/%s/%s" % (network_name, ammeter_id, "0")
-                    device_addr = ammeter_id
-                    device_port = 0
-                    device_type = self.device_type
-
-                if self.device_cmd_msg is not None:
-                    # 需要根据原有指令组包
-                    device_data_msg = {
-                        "device_id": device_id,
-                        "device_addr": device_addr,
-                        "device_port": device_port,
-                        "device_type": device_type,
-                        "protocol": self.protocol_type,
-                        "data": {"command_id": self.device_cmd_msg["command_id"], "result": ammeter_data}
-                    }
-                    device_data_msg_list.append(device_data_msg)
-
-                    # 处理完成后，消息置空
-                    self.device_cmd_msg = None
-        elif len(realcom_data_str) == 24:
-            # 控制指令结果
-            if self.device_cmd_msg is not None:
-                # 解析指令结果
-                result_data = "00"
                 # 需要根据原有指令组包
                 device_data_msg = {
-                    "device_id": self.device_cmd_msg["device_id"],
-                    "device_addr": self.device_cmd_msg["device_addr"],
-                    "device_port": self.device_cmd_msg["device_port"],
-                    "device_type": self.device_cmd_msg["device_type"],
+                    "device_id": orgin_device_cmd_msg["device_id"],
+                    "device_addr": orgin_device_cmd_msg["device_addr"],
+                    "device_port": orgin_device_cmd_msg["device_port"],
+                    "device_type": orgin_device_cmd_msg["device_type"],
                     "protocol": self.protocol_type,
-                    "data": {"command_id": self.device_cmd_msg["command_id"], "result": result_data}
+                    "data": {"command_id": orgin_device_cmd_msg["command_id"], "result": ammeter_data}
                 }
                 device_data_msg_list.append(device_data_msg)
-                # 处理完成后，消息置空
-                self.device_cmd_msg = None
+
+        elif len(realcom_data_str) == 24:
+            # 解析指令结果
+            result_data = "00"
+            # 需要根据原有指令组包
+            device_data_msg = {
+                "device_id": orgin_device_cmd_msg["device_id"],
+                "device_addr": orgin_device_cmd_msg["device_addr"],
+                "device_port": orgin_device_cmd_msg["device_port"],
+                "device_type": orgin_device_cmd_msg["device_type"],
+                "protocol": self.protocol_type,
+                "data": {"command_id": orgin_device_cmd_msg["command_id"], "result": result_data}
+            }
+            device_data_msg_list.append(device_data_msg)
         elif len(realcom_data_str) == 13:
             # 解析指令结果
-                result_data = realcom_data_str[20:22]
-                # 需要根据原有指令组包
-                device_data_msg = {
-                    "device_id": self.device_cmd_msg["device_id"],
-                    "device_addr": self.device_cmd_msg["device_addr"],
-                    "device_port": self.device_cmd_msg["device_port"],
-                    "device_type": self.device_cmd_msg["device_type"],
-                    "protocol": self.protocol_type,
-                    "data": {"command_id": self.device_cmd_msg["command_id"], "result": result_data}
-                }
-                device_data_msg_list.append(device_data_msg)
-                # 处理完成后，消息置空
-                self.device_cmd_msg = None
+            result_data = realcom_data_str[20:22]
+            # 需要根据原有指令组包
+            device_data_msg = {
+                "device_id": orgin_device_cmd_msg["device_id"],
+                "device_addr": orgin_device_cmd_msg["device_addr"],
+                "device_port": orgin_device_cmd_msg["device_port"],
+                "device_type": orgin_device_cmd_msg["device_type"],
+                "protocol": self.protocol_type,
+                "data": {"command_id": orgin_device_cmd_msg["command_id"], "result": result_data}
+            }
+            device_data_msg_list.append(device_data_msg)
         else:
             logger.error("消息格式错误:%s" % realcom_data_str)
 
