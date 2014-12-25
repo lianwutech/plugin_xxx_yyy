@@ -118,8 +118,7 @@ class BaseProtocol(object):
                 and "device_addr" in device_command_msg\
                 and "device_port" in device_command_msg\
                 and "command" in device_command_msg\
-                and "command_id" in device_command_msg\
-                and device_command_msg["device_type"] == self.device_type:
+                and "command_id" in device_command_msg:
             return True
         else:
             logger.error("错误消息:%r." % device_command_msg)
