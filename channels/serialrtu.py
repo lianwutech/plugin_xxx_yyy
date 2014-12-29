@@ -30,13 +30,19 @@ class SerialRtuChannel(BaseChannel):
         self.timeout = channel_params.get("timeout", 2)
         self.protocol.set_device_info(self.port, self.baund)
         # modbus通信对象
-        self.modbus_client = ModbusSerialClient(method='rtu',
-                                                port=self.port,
-                                                baudrate=self.baund,
-                                                stopbits=self.stopbits,
-                                                parity=self.parity,
-                                                bytesize=self.bytesize,
-                                                timeout=self.timeout)
+        try:
+            self.modbus_client = ModbusSerialClient(method='rtu',
+                                                    port=self.port,
+                                                    baudrate=self.baund,
+                                                    stopbits=self.stopbits,
+                                                    parity=self.parity,
+                                                    bytesize=self.bytesize,
+                                                    timeout=self.timeout)
+            self.modbus_client.connect()
+            logger.debug("连接串口成功.")
+        except Exception, e:
+            logger.error("连接串口失败，错误信息：%r." % e)
+            self.modbus_client = None
 
     @staticmethod
     def check_config(channel_params):
@@ -58,14 +64,6 @@ class SerialRtuChannel(BaseChannel):
                 "data": ""
             }
             self.mqtt_client.publish_data(device_msg)
-
-        try:
-            self.modbus_client.connect()
-            logger.debug("连接串口成功.")
-        except Exception, e:
-            logger.error("连接串口失败，错误信息：%r." % e)
-            self.modbus_client = None
-            return
 
         while True:
             # 该线程保持空转
