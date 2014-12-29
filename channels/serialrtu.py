@@ -82,6 +82,22 @@ class SerialRtuChannel(BaseChannel):
             logger.error("严重错误，设备%s未找到." % device_id)
             return
 
+        if self.modbus_client is None:
+            # 客户端异常，则重新连接
+            try:
+                self.modbus_client = ModbusSerialClient(method='rtu',
+                                                        port=self.port,
+                                                        baudrate=self.baund,
+                                                        stopbits=self.stopbits,
+                                                        parity=self.parity,
+                                                        bytesize=self.bytesize,
+                                                        timeout=self.timeout)
+                self.modbus_client.connect()
+                logger.debug("连接串口成功.")
+            except Exception, e:
+                logger.error("连接串口失败，错误信息：%r." % e)
+                return
+
         if device_cmd["func_code"] == const.fc_read_coils or device_cmd["func_code"] == const.fc_read_discrete_inputs:
             req_result = self.modbus_client.read_coils(device_cmd["addr"],
                                                        device_cmd["count"],
@@ -210,3 +226,6 @@ class SerialRtuChannel(BaseChannel):
                 "data": {"result": device_data}
             }
             self.mqtt_client.publish_data(device_data_msg)
+        else:
+            # modbus客户端异常，重置
+            self.modbus_client = None
