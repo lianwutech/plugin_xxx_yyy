@@ -28,7 +28,7 @@ class MQTTClient(object):
             logger.info("Connected with result code " + str(rc))
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
-            client.subscribe("%s/#" % self.network_name, qos=1)
+            client.subscribe("%s/#" % self.network_name, qos=0)
 
         # The callback for when a PUBLISH message is received from the server.
         def on_message(client, userdata, msg):
@@ -94,7 +94,7 @@ class MQTTClient(object):
             logger.debug("mqtt对象未初始化")
         else:
             self.mqtt_client.reconnect()
-            self.mqtt_client.publish(topic=self.gateway_topic, payload=json.dumps(device_data_msg), qos=1)
+            self.mqtt_client.publish(topic=self.gateway_topic, payload=json.dumps(device_data_msg), qos=0)
             logger.info("向Topic(%s)发布消息：%r" % (self.gateway_topic, device_data_msg))
 
     def run(self):
