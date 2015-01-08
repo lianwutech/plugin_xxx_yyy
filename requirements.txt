@@ -2,5 +2,5 @@
 
 httplib2
 pyserial
-mosquitto
+paho
 pymodbus
