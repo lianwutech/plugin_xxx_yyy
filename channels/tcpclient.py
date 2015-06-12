@@ -56,9 +56,9 @@ class TcpClientChannel(BaseChannel):
                 # 监听消息
                 data = self.socket.recv(1024)
                 if len(data) > 0:
-                    device_data_dict = self.protocol.process_data(self.network_name, data)
-                    logger.debug("Process data result: %r" % device_data_dict)
-                    for device_data in device_data_dict:
+                    device_data_list = self.protocol.process_data(self.network_name, data)
+                    logger.debug("Process data result: %r" % device_data_list)
+                    for device_data in device_data_list:
                         self.check_device(device_data["device_id"],
                                           device_data["device_type"],
                                           device_data["device_addr"],

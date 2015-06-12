@@ -4,3 +4,9 @@ httplib2
 pyserial
 paho-mqtt
 pymodbus
+libusb1
+pyusb  # pip install --pre pyusb
+Cython
+# sudo apt-get install libusb-1.0
+# sudo apt-get install libudev
+hidapi

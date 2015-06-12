@@ -16,11 +16,5 @@
       </profile-state>
     </entry>
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 2.7.5 virtualenv at ~/.virtualenvs/gateway" project-jdk-type="Python SDK" />
-  <component name="PyConsoleOptionsProvider">
-    <option name="myPythonConsoleState">
-      <console-settings />
-    </option>
-  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 2.7.5 virtualenv at ~/.virtualenvs/plugin" project-jdk-type="Python SDK" />
 </project>
-

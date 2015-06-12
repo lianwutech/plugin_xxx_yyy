@@ -20,3 +20,15 @@ channel(schema) + protocol ＋ mqtt
 
 mqtt进程为主进程
 channel进程为线程方式，每次处理调用protocol
+
+
+
+2015.06 新增hid设备支持
+requirements增加libusb1
+channel增加hidusb,参数如下:
+"channel": {
+  "vendor_id": 0x0922,
+  "product_id": 0x8003
+}
+protocol增加default
+

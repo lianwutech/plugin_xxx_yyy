@@ -5,6 +5,13 @@ import os
 import sys
 import json
 
+KeyBoard_A = 0x04
+KeyBoard_Z = 0x1D
+KeyBoard_1 = 0x1E
+KeyBoard_9 = 0x26
+KeyBoard_0 = 0x27
+KeyBoard_ENTER = 0x28
+
 
 def mkdir(path):
     # 引入模块
@@ -129,3 +136,22 @@ def convert(input):
         return input.encode('utf-8')
     else:
         return input
+
+
+def keyboardcode_to_ascii(kb_code):
+    """
+    键盘码转ascii字符
+    :param kb_code:
+    :return: 字符
+    """
+    # A~Z
+    if KeyBoard_A <= kb_code >= KeyBoard_Z:
+        return chr(ord('A') + kb_code - KeyBoard_A)
+
+    # 1~9
+    if KeyBoard_1 <= kb_code <= KeyBoard_9:
+        return chr(ord('1') + kb_code - KeyBoard_1)
+
+    # 0
+    if kb_code == KeyBoard_0:
+        return '0'
