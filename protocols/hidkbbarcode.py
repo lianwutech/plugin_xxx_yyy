@@ -18,8 +18,8 @@ class HidKbBarCodeProtocol(BaseProtocol):
     def __init__(self, protocol_params):
         BaseProtocol.__init__(self, protocol_params)
         # 修改协议名称
-        self.protocol_type = "kbbarcode"
-        self.device_type = "kbbarcode"
+        self.protocol_type = "hidkbbarcode"
+        self.device_type = "hidkbbarcode"
 
     def process_data(self, network_name, data):
         """
