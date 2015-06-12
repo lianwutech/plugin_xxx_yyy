@@ -76,7 +76,6 @@ class HidKeyBoardChannel(BaseChannel):
         logger.debug("Serial No: %s" % hid_device.get_serial_number_string())
 
         result_list = list()
-        be_clear = False
         while True:
             # 该线程保持空转
             try:
