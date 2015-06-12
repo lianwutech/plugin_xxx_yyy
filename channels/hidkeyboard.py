@@ -65,7 +65,12 @@ class HidKeyBoardChannel(BaseChannel):
             logger.debug("")
 
         # 打开设备
-        hid_device = hid.device(self.vendor_id, self.product_id)
+        try:
+            hid_device = hid.device(self.vendor_id, self.product_id)
+        except Exception, e:
+            logger.error("hid.device exception: %r." % e)
+            return
+
         logger.debug("Manufacturer: %s" % hid_device.get_manufacturer_string())
         logger.debug("Product: %s" % hid_device.get_product_string())
         logger.debug("Serial No: %s" % hid_device.get_serial_number_string())
@@ -74,7 +79,11 @@ class HidKeyBoardChannel(BaseChannel):
         be_clear = False
         while True:
             # 该线程保持空转
-            data = hid_device.read(self.device_max_packet_size)
+            try:
+                data = hid_device.read(self.device_max_packet_size)
+            except Exception, e:
+                logger.error("hid_device.read exception: %r." % e)
+                break
 
             if data:
                 result_list.extend(data)
