@@ -145,7 +145,7 @@ def keyboardcode_to_ascii(kb_code):
     :return: 字符
     """
     # A~Z
-    if KeyBoard_A <= kb_code >= KeyBoard_Z:
+    if KeyBoard_A <= kb_code <= KeyBoard_Z:
         return chr(ord('A') + kb_code - KeyBoard_A)
 
     # 1~9
