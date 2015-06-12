@@ -57,7 +57,9 @@ class HidKbBarCodeProtocol(BaseProtocol):
             del data[8 * (i-1) + 1]     # 保留字段
 
         # 清除无效按键和回车键
-        data.remove(KeyBoard_ENTER)
+        for i in range(0, len(data)):
+            if data[i] == KeyBoard_ENTER or data[i] == 0:
+                del data[i]
 
         # 数据转换
         result = ""
