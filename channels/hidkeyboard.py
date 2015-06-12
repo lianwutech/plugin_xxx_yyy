@@ -78,6 +78,7 @@ class HidKeyBoardChannel(BaseChannel):
 
             if data:
                 result_list.extend(data)
+                logger.debug("data: %r , result data:%r" % (data, result_list))
                 # 键盘的输入报表和输出报表的数据格式。其中输入报表共8个字节，输出报表只有1个字节。
                 # 修饰键, 保留, 键值1, 键值2, 键值3, 键值4, 键值5, 键值6
                 # 修饰键存放指示灯信息
