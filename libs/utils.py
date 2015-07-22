@@ -5,6 +5,8 @@ import os
 import sys
 import json
 
+from struct import pack, unpack_from, calcsize
+
 KeyBoard_A = 0x04
 KeyBoard_Z = 0x1D
 KeyBoard_1 = 0x1E
@@ -155,3 +157,7 @@ def keyboardcode_to_ascii(kb_code):
     # 0
     if kb_code == KeyBoard_0:
         return '0'
+
+def unpack_from_bin(fmt, buf, offset=0):
+    """重载struct.unpack_from函数"""
+    return unpack_from(fmt, buf, offset)
